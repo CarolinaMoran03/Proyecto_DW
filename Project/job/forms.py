@@ -5,9 +5,11 @@ class JobForm(forms.ModelForm):
     class Meta:
         model = Job
         fields = '__all__'
+        exclude = ['description', 'user']
         labels = {
             'title': 'Titulo de la Oferta',
             'mode': 'Modalidad',
+            'email': 'Correo de Empresa',
             'skills': 'Aptitudes y Habilidades',
             'company': 'Empresa',
             'address': 'Lugar de Trabajo',
@@ -18,6 +20,10 @@ class JobForm(forms.ModelForm):
             'title': forms.TextInput(attrs={
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg', 
                 'placeholder': 'Programador JR'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg', 
+                'placeholder': 'empresa@example.com'
             }),
             'mode': forms.Select(attrs={
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg'
@@ -40,3 +46,5 @@ class JobForm(forms.ModelForm):
                 'rows': 4
             })
         }
+        
+

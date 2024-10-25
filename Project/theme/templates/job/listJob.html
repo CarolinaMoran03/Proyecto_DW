@@ -1,64 +1,292 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{%load static%} 
 {% block title %}
     ProEmpleo
 {% endblock %}
 {% block content %}
 
 <div class="container h-full bg-gray-100 p-8">
-    <div class="flex gap-10">
-        <!-- Div 1 -->        <div class="w-1/3 p-4">
+    <!-- Modal para la imagen -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-transparent p-4 max-w-2x1 w-full mx-4">
+            <div class="flex justify-end mb-2">
+                <button onclick="closeImageModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            <div class="flex flex-col items-center gap-4">
+                <img id="modalImage" src="" alt="Perfil" class="max-h-[70vh] w-auto rounded-lg">
+                <button onclick="deleteProfilePhoto()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors">
+                    <i class='bx bx-trash'></i> Eliminar foto
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contador de visitas y Menú desplegable con opción de Cerrar Sesión -->
+    <div class="flex justify-between items-center">
+        <div>
+            Visitas: <span id="visit-counter">{{ visit_count }}</span>
+        </div>
+        <div class="relative">
+            <button class="bg-gray-100 p-2 rounded-full border-cyan-500 border" onclick="toggleMenu()">
+                Menú
+            </button>
+            <div id="menu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg">
+                <a href="{% url 'logout' %}" class="block px-4 py-2 text-black hover:bg-gray-200">Cerrar Sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex gap-10 mt-8">
+        <!-- Div 1 -->        
+        <div class="w-1/3 p-4">
             <div class="bg-white p-4 rounded">
-                <div class="flex justify-start">
-                    <div class="w-32 h-32 bg-gray-300 rounded-full overflow-hidden">
-                        <img src="../media/Perfil.jpeg" alt="Perfil" class="w-full h-full object-cover">
+                <div class="flex justify-start relative group">
+                    <div class="w-48 h-48 bg-gray-400 rounded-full overflow-hidden cursor-pointer relative" onclick="openImageModal()">
+                        {% if request.user.profile.photo %}
+                            <img src="{{ request.user.profile.photo.url }}" alt="Perfil" class="w-full h-full object-cover" id="profile-image">
+                        {% else %}
+                            <img src="{% static 'img/default-profile.png' %}" alt="Perfil" class="w-full h-full object-cover" id="profile-image">
+                        {% endif %}
+                        
+                        <!-- Overlay con botón de cambiar imagen -->
+                        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <label for="profile-photo" class="cursor-pointer text-white text-sm">
+                                <i class='bx bx-camera'></i> Cambiar foto
+                            </label>
+                            <input type="file" 
+                                   id="profile-photo" 
+                                   name="photo" 
+                                   class="hidden" 
+                                   accept="image/*"
+                                   onchange="uploadProfilePhoto(this)">
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h2 class="text-2xl"><strong>Alex Clavijo</strong></h2>
+                <div> 
+                    <h2 class="text-2xl">{{ request.user.first_name|title }} {{ request.user.last_name|title }}</h2>
                     <p class="text-black">Estudiante en la Universidad Estatal de Milagro</p>
                 </div>
             </div>
             <div class="my-5">
                 <a href="{% url 'createjob' %}" class="bg-transparent p-2 border-cyan-500 rounded-full" style="border: solid rgb(12 200 232) 1px;">
                     <i class='bx bx-edit'></i> Publicar un empleo
-                </a>
+                </a>    
             </div>
-
         </div>
         <div class="w-2/3">
             <div class="bg-white p-4">
-                <p class="text-black"><strong>TRABAJOS</strong></p>
+                <p class="text-black bg-black-300">Prueba Sales Navigator y ponte a la delantera</p>
             </div>
             <div class="bg-white p-4 mt-4">
-                <div class="container-fluid flex-initial  bg-white rounded inline-block px-4 w-full">
+                <div class="container-fluid flex-initial bg-white rounded inline-block px-4 w-full">
                     {% for obj in object_list %}
-                    <div class="flex items-center gap-4 my-6">
-                        <div>
-                            <img src="{{ obj.company.photo.url }}" alt="sin logo" width="100rem">
+                    <div class="flex items-center justify-between gap-4 my-6">
+                        <div class="flex items-center gap-4">
+                            <div>
+                                {% if obj.company.photo and obj.company.photo.url %}
+                                    <img src="{{ obj.company.photo.url }}" alt="sin logo" width="100rem">
+                                {% else %}
+                                    <img src="" alt="No hay imagen">
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{% url 'job_detail' obj.pk %}">
+                                    <h4>{{ obj.title|title }}</h4>
+                                    <span>{{obj.company.description|title}} - {{obj.address.description}}, {{obj.address.province.description}}, {{obj.address.province.country.description}}   ({{ obj.mode.description }})</span>
+                                </a>               
+                            </div>
                         </div>
                         <div>
-                            <a href="{% url 'job_detail' obj.pk %}">
-                                <h4>{{ obj.title|title }}</h4>
-                                <span>{{obj.company.description|title}} - {{obj.address.description}}, {{obj.address.province.description}}, {{obj.address.province.country.description}}   ({{ obj.mode.description }})</span>
-                            </a>                
+                            {% if obj.user != request.user %}
+                                {% if obj.postulation_status %}
+                                    <span class="px-2 py-1 rounded-full text-sm 
+                                        {% if obj.postulation_status == 'pendiente' %}bg-yellow-200 text-yellow-800
+                                        {% elif obj.postulation_status == 'aprobado' %}bg-green-200 text-green-800
+                                        {% elif obj.postulation_status == 'rechazado' %}bg-red-200 text-red-800
+                                        {% endif %}">
+                                        {{ obj.postulation_status|title }}
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 py-1 rounded-full text-sm bg-gray-200 text-gray-800">
+                                        No postulado
+                                    </span>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
-                    {% empty%}        
-                    <div class="flex items-center gap-4">
-                        <div>
-                            <img src="https://th.bing.com/th/id/OIP.P2XMDlEjU52ceoDsluNffwHaHa?rs=1&pid=ImgDetMain" alt="sin logo" width="100rem">
-                        </div>
-                        <div>
-                            <h4>Analista Gobierno de Datos</h4>
-                            <span>Banco Bolivariano - Guayaquil, Guayas, Ecuador (Presencial)</span>
-                        </div>
-                    </div>
+                    {% empty %}
+                    <h1>No hay Ofertas de trabajo por el momento</h1>
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
-  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        const VISIT_KEY = 'last_visit_date';
+        const VISIT_EXPIRY = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+    
+        function shouldIncrementCounter() {
+            const lastVisit = localStorage.getItem(VISIT_KEY);
+            const currentTime = new Date().getTime();
+    
+            if (!lastVisit) {
+                localStorage.setItem(VISIT_KEY, currentTime);
+                return true;
+            }
+    
+            // Comprobar si ha pasado el tiempo de expiración
+            if (currentTime - parseInt(lastVisit) > VISIT_EXPIRY) {
+                localStorage.setItem(VISIT_KEY, currentTime);
+                return true;
+            }
+    
+            return false;
+        }
+    
+        function incrementVisitCounter() {
+            if (shouldIncrementCounter()) {
+                $.ajax({
+                    url: "{% url 'increment_counter' %}",
+                    method: "POST",
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        $('#visit-counter').text(response.count);
+                    },
+                    error: function(xhr) {
+                        console.error("Error incrementando el contador:", xhr.responseText);
+                    }
+                });
+            } else {
+                updateVisitCounter(); 
+            }
+        }
+    
+        function updateVisitCounter() {
+            $.ajax({
+                url: "{% url 'get_counter' %}",
+                method: "GET",
+                success: function(response) {
+                    $('#visit-counter').text(response.count);
+                },
+                error: function(xhr) {
+                    console.error("Error obteniendo el contador:", xhr.responseText);
+                }
+            });
+        }
+    
+        incrementVisitCounter();
+        setInterval(updateVisitCounter, 5000);
+    });
+
+    function toggleMenu() {
+        var menu = document.getElementById("menu");
+        menu.classList.toggle("hidden");
+    }
+
+    function openImageModal() {
+        const modal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const profileImage = document.getElementById('profile-image');
+        
+        modalImage.src = profileImage.src;
+        modal.classList.remove('hidden');
+        
+        // Prevenir scroll del body cuando el modal está abierto
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function deleteProfilePhoto() {
+        if (confirm('¿Estás seguro que deseas eliminar tu foto de perfil?')) {
+            $.ajax({
+                url: "{% url 'delete_profile_photo' %}",
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Actualizar la imagen al default
+                        const defaultImage = "{% static 'img/default-profile.png' %}";
+                        document.getElementById('profile-image').src = defaultImage;
+                        document.getElementById('modalImage').src = defaultImage;
+                        // Limpiar el input file
+                        document.getElementById('profile-photo').value = '';
+                        closeImageModal();
+                    } else {
+                        alert('Error al eliminar la foto de perfil: ' + (response.error || 'Error desconocido'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Error al eliminar la imagen: ' + error);
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+    }
+    
+    function uploadProfilePhoto(input) {
+        if (input.files && input.files[0]) {
+            const formData = new FormData();
+            formData.append('photo', input.files[0]);
+            
+            // Muestra indicador de carga
+            const profileImg = document.getElementById('profile-image');
+            profileImg.style.opacity = '0.5';
+            
+            $.ajax({
+                url: "{% url 'update_profile_photo' %}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Actualiza la imagen y añade un timestamp para evitar el caché
+                        const newUrl = response.photo_url + '?t=' + new Date().getTime();
+                        profileImg.src = newUrl;
+                        document.getElementById('modalImage').src = newUrl;
+                        profileImg.style.opacity = '1';
+                    } else {
+                        alert('Error al actualizar la foto de perfil: ' + (response.error || 'Error desconocido'));
+                        profileImg.style.opacity = '1';
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Error al subir la imagen: ' + error);
+                    console.error(xhr.responseText);
+                    profileImg.style.opacity = '1';
+                },
+                complete: function() {
+                    // Limpiar el input file después de la carga
+                    input.value = '';
+                }
+            });
+        }
+    }
+
+    // Cerrar el modal cuando se hace clic fuera de él
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImageModal();
+        }
+    });
+</script>
 {% endblock %}

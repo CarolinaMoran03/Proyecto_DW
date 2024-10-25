@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
 ]
 
+LOGIN_URL="login"
 
 TAILWIND_APP_NAME = "theme"
 

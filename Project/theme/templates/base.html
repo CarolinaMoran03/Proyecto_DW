@@ -6,31 +6,25 @@
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <title>{% block title %}Mi Sitio Web{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  
 </head>
-<body class="bg-gray-100 text-gray-800">
+	<body class="h-screen">
+		
+		<div class="bg-white h-full">
+			{% block header%}
+				<header class="absolute inset-x-0 top-0 z-50">
+								
+				</header>
+			{% endblock %}
+			<div class="h-full {{ background }}">
+				{% block content %}
+				
+				{% endblock %}
+			</div>
+		</div>
+		
 
-  {% block header %}
-  <header class="bg-green-600 text-white p-4 shadow-md fixed inset-x-0 top-0 z-50">
-    <div class="container mx-auto flex justify-between items-center">
-      <a href="#" class="text-2xl font-semibold">Ofertas De Empleos</a>
-    </div>
-  </header>
-  {% endblock %}
 
-  <div class="pt-16 min-h-screen bg-gray-100">
-    {% block content %}
-    <div class="container mx-auto p-6">
-      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-          <div class="flex items-center mb-4">
-            <img src="https://via.placeholder.com/150" alt="Company Logo" class="w-16 h-16 object-cover rounded-full border-2 border-green-600">
-          </div>
-          <a href="{% url 'job_detail' job.id %}" class="block text-center bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">View Details</a>
-        </div>
-      </div>
-    </div>
-    {% endblock %}
-  </div>
 
-</body>
+	</body>
 </html>

@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('', CoreLoginView.as_view(), name="login"),
-    path('register/', RegisterView.as_view(), name="register"),
+    path('logout/', CoreLogoutView.as_view(), name="logout"),
 ]
 
 if settings.DEBUG:

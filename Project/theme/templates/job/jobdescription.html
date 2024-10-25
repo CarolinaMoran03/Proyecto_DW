@@ -1,9 +1,124 @@
 {% extends 'base.html' %}
 {% block title %}
-    Editar
+Editar
 {% endblock %}
 {% load static %}
 
 {% block content %}
 
-{%endblock%}
+<div class="flex flex-col lg:flex-row lg:space-x-10 lg:justify-between items-start p-4 bg-gray-300 min-h-screen">
+    <div class="max-w-4xl lg:w-3/4 mx-auto mt-10 bg-white p-6 rounded-lg shadow-md border border-gray-300">
+        <h2 class="text-2xl font-semibold mb-4">Háblanos del puesto</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="description" class="block text-lg font-medium text-gray-700 mb-1">
+                    Descripción <span class="text-red-600"></span>
+                </label>
+                <p class="text-sm text-gray-500 mb-3">
+                    Consejos: Haz un resumen del puesto, explica qué se necesita para triunfar en él y el lugar que ocupa en la empresa.
+                </p>
+                <textarea id="description" 
+                          name="description" 
+                          rows="10"
+                          maxlength="10000"
+                          class="w-full border border-gray-300 rounded-md p-3 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Responsabilidades:
+
+                [Describe con precisión todas las responsabilidades. Usa un lenguaje inclusivo.] 
+                Ejemplo: Definir y desarrollar los requisitos para los sistemas en fase de producción 
+                para garantizar la máxima facilidad de uso.
+                
+Requisitos:
+                [Algunos requisitos que podrías incluir: aptitudes, estudios, experiencia o certificados.]
+                Ejemplo: Excelentes dotes para la comunicación oral y escrita."
+                          oninput="updateCharacterCount()"></textarea>
+                
+                <div class="flex justify-between items-center mt-2">
+                    <p class="text-sm text-gray-500" id="charWarning"></p>
+                    <p class="text-sm text-gray-500" id="charCount">0/3,000</p>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center">
+                <a href="{% url 'createjob' %}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg shadow-sm">  
+                    Regresar
+                </a>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700">
+                    Publicar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="max-w-sm lg:w-1/4 mt-10 transform lg:-translate-x-6">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-300">
+            <div class="px-3 py-5 sm:px-4">
+                {% if job.company.photo and job.company.photo.url %}
+                    <div>
+                        <img src="{{ job.company.photo.url }}" alt="Logo de {{ job.company.name }}" width="100rem">
+                    </div>
+                {% else %}
+                    <div>
+                        <img src="{% static 'img/no-image.png' %}" alt="sin logo" width="100rem">
+                    </div>
+                {% endif %}
+                <h3 class="text-lg leading-6 font-medium text-gray-900">{{ job.title }}</h3>
+                <p class="mt-1 max-w-2xl text-sm text-gray-500">{{ job.company.description }}</p>
+            </div>
+            <div class="border-t border-gray-200 px-3 py-5 sm:px-4">
+                <p class="text-sm text-gray-500">{{ job.address.description }}, {{ job.address.province.description }} ({{ job.mode.description }})</p>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-300 mt-4">
+            <div class="px-3 py-5 sm:px-4">
+                <h2 class="text-1x2 font-semibold mb-4">Lleva tu empleo hasta los profesionales adecuados</h2>
+                <p class="text-sm text-gray-500 mb-3">
+                    Incluye la descripción del puesto y añade las aptitudes necesarias para segmentar a los profesionales que cumplan los requisitos.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateCharacterCount() {
+        const descriptionField = document.getElementById('description');
+        const charCount = document.getElementById('charCount');
+        const charWarning = document.getElementById('charWarning');
+        const maxLength = 3000;
+        let currentLength = descriptionField.value.length;
+        
+        // Corta el texto si excede el límite
+        if (currentLength > maxLength) {
+            descriptionField.value = descriptionField.value.substring(0, maxLength);
+            currentLength = maxLength;
+        }
+        
+        charCount.textContent = `${currentLength}/${maxLength}`;
+        
+        // Aqui actualizamos los estilo del mensaje segun el numero de carrractere 
+        if (currentLength >= maxLength) {
+            charCount.classList.add('text-red-500');
+            charCount.classList.remove('text-gray-500');
+            charWarning.textContent = 'Has alcanzado el límite de caracteres';
+            charWarning.classList.add('text-red-500');
+        } else if (currentLength >= maxLength * 0.9) { 
+            charCount.classList.add('text-yellow-600');
+            charCount.classList.remove('text-gray-500', 'text-red-500');
+            charWarning.textContent = 'Te estás acercando al límite de caracteres';
+            charWarning.classList.add('text-yellow-600');
+            charWarning.classList.remove('text-red-500');
+        } else {
+            charCount.classList.add('text-gray-500');
+            charCount.classList.remove('text-red-500', 'text-yellow-600');
+            charWarning.textContent = '';
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', updateCharacterCount);
+</script>
+
+{% endblock %}
